@@ -1,0 +1,227 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUT Audit Course Complaint</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f3f4f6;
+    padding: 25px 15px;
+    color: #222;
+}
+
+.container {
+    max-width: 650px;
+    margin: auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.07);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 25px;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    margin: 15px 0 7px;
+    font-size: 14px;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    outline: none;
+    font-size: 14px;
+}
+
+input:focus, select:focus {
+    border-color: #222;
+}
+
+.recipients {
+    background: #f7f7f7;
+    padding: 13px;
+    border-radius: 7px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #444;
+    overflow-wrap: anywhere;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    background: #111;
+    color: white;
+    border: none;
+    border-radius: 7px;
+    margin-top: 25px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #333;
+    transform: translateY(-2px);
+}
+
+.note {
+    margin-top: 18px;
+    font-size: 12px;
+    color: #777;
+    text-align: center;
+    line-height: 1.6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>JUT Audit Course Complaint</h2>
+<p class="subtitle">Regional Language Enrollment Issue</p>
+
+<form id="complaintForm">
+
+<label>Student Name *</label>
+<input type="text" id="name" placeholder="Enter your full name" required>
+
+<label>College Name *</label>
+<input type="text" id="college" placeholder="Enter your polytechnic college name" required>
+
+<label>Branch *</label>
+<input type="text" id="branch" placeholder="Example: Electrical Engineering" required>
+
+<label>Semester *</label>
+<select id="semester" required>
+<option value="">Select Semester</option>
+<option>5th Semester</option>
+<option>6th Semester</option>
+<option>Other</option>
+</select>
+
+<label>Batch</label>
+<input type="text" id="batch" value="2023-2026" required>
+
+<label>Contact Number</label>
+<input type="tel" id="phone" placeholder="Enter your mobile number"
+pattern="[0-9]{10}" maxlength="10">
+
+<label>Complaint Recipients (CC)</label>
+<div class="recipients">
+assistantregistrarjut@gmail.com<br>
+registrarjut@gmail.com<br>
+Haimantibanerji@gmail.com
+</div>
+
+<label>Subject</label>
+<input type="text" value="Audit Course Regional Language Enrollment Issues" readonly>
+
+<button type="submit">SEND COMPLAINT EMAIL →</button>
+
+</form>
+
+<p class="note">
+Your email application will open with the complaint message prepared.
+Please review and click Send.
+</p>
+
+</div>
+
+<script>
+
+document.getElementById("complaintForm").addEventListener("submit", function(e) {
+
+    e.preventDefault();
+
+    const name = document.getElementById("name").value.trim();
+    const college = document.getElementById("college").value.trim();
+    const branch = document.getElementById("branch").value.trim();
+    const semester = document.getElementById("semester").value;
+    const batch = document.getElementById("batch").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+
+    const cc = [
+        "assistantregistrarjut@gmail.com",
+        "registrarjut@gmail.com",
+        "Haimantibanerji@gmail.com"
+    ].join(",");
+
+    const subject = "Audit Course Regional Language Enrollment Issues";
+
+    const body = `Respected Sir/Madam,
+
+I am a student of ${college}, affiliated with Jharkhand University of Technology (JUT), Ranchi.
+
+My academic details are:
+Name: ${name}
+College: ${college}
+Branch: ${branch}
+Semester: ${semester}
+Batch: ${batch}
+Contact Number: ${phone || "Not provided"}
+
+Recently, students were instructed to enroll in the Regional Language Audit Course. We appreciate this initiative, as it can be beneficial for students.
+
+However, while enrolling through the IIT Kharagpur CE&T portal (https://erp.iitkgp.ac.in/CEP/courses.htm), students have been facing several technical issues:
+
+1. Server and website loading problems.
+2. Registration form data not displaying correctly. Some students' photos, signatures, or marks are not visible.
+3. Payment gateway errors, with payments failing or remaining in pending status.
+4. Even after successful payment, payment history is not appearing on the portal.
+
+These issues have continued for several days, and many students are still unable to complete their registration and payment process.
+
+As the enrollment deadline is approaching or may have already passed, I kindly request the University to look into this matter urgently and take necessary action to resolve these technical issues.
+
+We also request that the enrollment and payment deadline be extended so that affected students get a fair opportunity to complete the process.
+
+Thank you for your understanding and support.
+
+Yours sincerely,
+${name}
+${college}
+${branch} | ${semester}
+Batch: ${batch}
+Contact: ${phone || "Not provided"}`;
+
+    const gmailURL =
+        "https://mail.google.com/mail/?view=cm&fs=1" +
+        "&cc=" + encodeURIComponent(cc) +
+        "&su=" + encodeURIComponent(subject) +
+        "&body=" + encodeURIComponent(body);
+
+    window.open(gmailURL, "_blank");
+
+});
+
+</script>
+
+</body>
+</html>

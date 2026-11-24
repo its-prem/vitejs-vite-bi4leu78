@@ -1,0 +1,124 @@
+PREMium Mind — App-Only Courses Setup
+=====================================
+
+GOAL
+----
+DB me jinka flag ON ho, woh courses website pe LIST dikhenge,
+lekin Buy / Open sirf Android App me hoga.
+
+
+1) DATABASE (phpMyAdmin → premind DB)
+-------------------------------------
+ALTER TABLE courses
+  ADD COLUMN app_only TINYINT(1) NOT NULL DEFAULT 0
+  COMMENT '1 = buy/open only in Android app';
+
+-- Optional alias column (same meaning; code supports both):
+-- ALTER TABLE courses ADD COLUMN only_app_access TINYINT(1) NOT NULL DEFAULT 0;
+
+-- Enable for a course (example course id 58):
+UPDATE courses SET app_only = 1 WHERE id = 58;
+
+-- Disable again:
+UPDATE courses SET app_only = 0 WHERE id = 58;
+
+
+2) API (Hostinger: public_html/premind/api.php)
+-----------------------------------------------
+Agar courses query `SELECT * FROM courses` use karti hai → kuch change nahi.
+Column auto JSON me aa jayega: "app_only": "1"
+
+Agar columns manually listed hain, list me `app_only` add karo.
+Website `pm-app-gate.js` in fields ko padhta hai:
+  - app_only
+  - only_app_access
+
+
+3) CREATE ORDER GATE (Hostinger upload REQUIRED)
+------------------------------------------------
+Local file: server/create_order.php
+Upload to: public_html/premind/create_order.php
+
+Yeh block karta hai:
+  app_only=1 AND request me from_app=false/missing → order reject
+App se buy pe website `from_app: true` bhejti hai.
+
+
+4) APK HOSTING (download page)
+------------------------------
+Path on Hostinger:
+  public_html/premind/downloads/PREMium-Mind.apk
+  public_html/premind/download_apk.php   ← use this URL (direct .apk often 404/blocked)
+
+Public URL (in app-version.json):
+  https://premind.diplomawallah.in/download_apk.php
+
+Also upload downloads/.htaccess if you want direct .apk access.
+
+
+5) WEBSITE FILES (Netlify / GitHub)
+-----------------------------------
+  app-download.html     → App Version page (menu se)
+  app-version.json      → latest version + apkUrl + changelog
+  pm-app-gate.js        → deep link + Buy in App modal
+  index.html            → APP ONLY badge + Buy/Open in App
+  lecture.html          → Open in App for enrolled app-only
+
+
+6) ANDROID APP REBUILD
+----------------------
+Manifest me deep link:
+  premiummind://buy?id=ID
+  premiummind://open?id=ID
+
+Naya APK build karke Hostinger downloads/ pe upload karo,
+phir app-version.json me version/changelog update karo.
+
+
+QUICK TEST
+----------
+1. DB: app_only=1 set karo kisi course pe
+2. Website store me "APP ONLY" badge + "Buy in App" dikhe
+3. Click → Open in App / Download page
+4. App me same course normal Buy chalega
+5. Website se create_order directly try → "App exclusive course" error
+
+
+7) PDF SERVING — REAL "sirf app me khule" ENFORCEMENT
+-------------------------------------------------------
+app_only PDFs (get_pdf_token.php / proxy_pdf.php / secure_pdf.php /
+secure_page_image.php) abhi Origin header check karte hain
+(capacitor://localhost, https://localhost, etc.) — ye normal browser
+se block karta hai, LEKIN curl/Postman jaisa tool Origin header khud
+fake kar sakta hai. Isse 100% "sirf app" banane ke liye app ko har PDF
+request ke saath ek signature bhejna hoga jo sirf app ke paas hi ban
+sakta hai.
+
+Server-side ye already ready hai (pm_pdf_access.php: pm_app_signature_valid())
+— bas app update hone ka wait kar raha hai. Jab tak app ye headers nahi
+bhejta, purana Origin-check hi kaam karta rahega (kuch nahi tootega).
+
+SECRET (already set in server/pm_secrets.php as 'app_shared_secret'):
+  4ce7f41875b7849cfa444b89019e73e59e16f93e3dca98b571d3c2951603a23f
+
+App me is secret ko compiled code me daalo (BuildConfig field / native
+code me — SharedPreferences ya kisi asaani se extract hone waali jagah
+NAHI). Har PDF-related request (get_pdf_token.php, proxy_pdf.php,
+secure_pdf.php, secure_page_image.php) ke saath ye 2 headers bhejo:
+
+  X-PM-App-Ts:   current unix timestamp (seconds), e.g. 1786992167
+  X-PM-App-Sign: hex(HMAC_SHA256(ts_as_string, app_shared_secret))
+
+Kotlin example:
+  val ts = (System.currentTimeMillis() / 1000).toString()
+  val mac = Mac.getInstance("HmacSHA256")
+  mac.init(SecretKeySpec(APP_SHARED_SECRET.toByteArray(), "HmacSHA256"))
+  val sign = mac.doFinal(ts.toByteArray()).joinToString("") { "%02x".format(it) }
+  // headers: X-PM-App-Ts = ts, X-PM-App-Sign = sign
+
+Signature 5 minute ke andar hi valid hai (replay protection) — har
+request pe fresh ts/signature banao, purana reuse mat karo.
+
+Test hone ke baad, agar chaho to Origin-check hata kar SIRF signature
+required bana sakte ho (aur zyada strict) — abhi dono ek saath (OR)
+kaam karte hain taaki purana app version na toote.

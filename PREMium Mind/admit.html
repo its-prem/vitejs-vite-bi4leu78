@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Admit Card</title>
+    <link href="JUTico.png" rel="shortcut icon" type="image/x-icon">
+
+    <script type="text/javascript">
+        function printDiv() {
+            window.print();
+        }
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.42857143;
+            color: #333;
+            background-color: #eef2f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ================= SPLIT SCREEN LAYOUT ================= */
+        .workspace-wrapper {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* Left Side: Editor Box */
+        .left-editor-pane {
+            width: 38%;
+            min-width: 380px;
+            height: 100vh;
+            overflow-y: auto;
+            background: #ffffff;
+            border-right: 3px solid #70a105;
+            padding: 15px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.08);
+        }
+
+        /* Right Side: Admit Card Preview */
+        .right-preview-pane {
+            width: 62%;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .admit-card-sheet {
+            background: #fff;
+            width: 820px;
+            padding: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        /* Direct Cursor Edit Highlight Effect */
+        [contenteditable="true"]:hover {
+            outline: 1px dashed #70a105;
+            background-color: rgba(112, 161, 5, 0.04);
+            cursor: text;
+        }
+
+        [contenteditable="true"]:focus {
+            outline: 2px solid #146405;
+            background-color: #fffef0;
+        }
+
+        /* ================= EDITOR CONTROLS STYLING ================= */
+        .left-editor-pane h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #146405;
+            border-bottom: 2px solid #70a105;
+            padding-bottom: 5px;
+            font-size: 15px;
+            text-transform: uppercase;
+        }
+
+        .tip-banner {
+            background: #e8f5e9;
+            border-left: 4px solid #146405;
+            padding: 8px 10px;
+            font-size: 12px;
+            color: #1b5e20;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 3px;
+            color: #222;
+            text-transform: uppercase;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="file"],
+        .form-group textarea {
+            padding: 6px 8px;
+            border: 1px solid #bbb;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #fff;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            resize: vertical;
+        }
+
+        .format-hint {
+            font-size: 11px;
+            color: #555;
+            background: #f8f9fa;
+            border: 1px dashed #ccc;
+            padding: 6px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+        }
+
+        .btn-action {
+            background: #146405;
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            width: 100%;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        .btn-action:hover {
+            background: #0f4b03;
+        }
+
+        /* ================= ORIGINAL ADMIT CARD STYLING ================= */
+        .text-center {
+            text-align: center;
+        }
+
+        .img-responsive {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .img-rounded {
+            border-radius: 6px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 6px 12px;
+            margin-bottom: 0;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.42857143;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+
+        hr {
+            margin-top: 0px;
+            margin-bottom: 0px;
+            border: 0;
+            border-top: 1px solid #eee;
+        }
+
+        table {
+            border-spacing: 0;
+            border-collapse: initial;
+        }
+
+        p {
+            margin: 0 0 8px;
+        }
+
+        #SubjectTable {
+            border-collapse: collapse;
+        }
+
+        #SubjectTable th, #SubjectTable td {
+            border: 1px solid #000;
+            padding: 5px 6px;
+        }
+
+        #SubjectList tr {
+            font-family: 'Segoe UI Semibold';
+            font-size: 12px;
+            color: #000;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .LoaderPopup {
+            display: none;
+        }
+
+        /* ================= PRINT MEDIA RULES ================= */
+        @media print {
+            body {
+                background: #fff;
+                zoom: 99%;
+            }
+            .no-print, .left-editor-pane {
+                display: none !important;
+            }
+            .workspace-wrapper {
+                display: block;
+                height: auto;
+                overflow: visible;
+            }
+            .right-preview-pane {
+                width: 100%;
+                height: auto;
+                padding: 0;
+                margin: 0;
+                overflow: visible;
+                display: block;
+            }
+            .admit-card-sheet {
+                width: 100%;
+                padding: 0;
+                box-shadow: none;
+            }
+            [contenteditable="true"]:hover,
+            [contenteditable="true"]:focus {
+                outline: none !important;
+                background: transparent !important;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 2mm;
+            }
+        }
+    </style>
+</head>
+<body id="allElements">
+
+    <div class="workspace-wrapper">
+        
+        <!-- ================= LEFT SIDE: INPUT & BULK FORMAT PANEL ================= -->
+        <div class="left-editor-pane no-print">
+            <div class="tip-banner">
+                💡 Tip: Aap yahan Left box se bhi edit kar sakte hain, ya seedha Right side Admit Card ke kisi bhi text par click karke wahi type/modify kar sakte hain!
+            </div>
+
+            <h3>1. Student &amp; Exam Details</h3>
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label>Exam Name:</label>
+                    <input type="text" id="in_ExamName" value="DIPLOMA FIFTH SEMESTER EXAM-2025" oninput="syncDetails()">
+                </div>
+                <div class="form-group full-width">
+                    <label>Institute Name:</label>
+                    <input type="text" id="in_InstituteName" value="GOVERNMENT POLYTECHNIC, ADITYAPUR" oninput="syncDetails()">
+                </div>
+                <div class="form-group">
+                    <label>Branch:</label>
+                    <input type="text" id="in_Branch" value="COMPUTER SCIENCE ENGINEERING" oninput="syncDetails()">
+                </div>
+                <div class="form-group">
+                    <label>Registration No:</label>
+                    <input type="text" id="in_RegNo" value="23402060002" oninput="syncDetails()">
+                </div>
+                <div class="form-group">
+                    <label>Student Name:</label>
+                    <input type="text" id="in_StudentName" value="ADITYA KUMAR" oninput="syncDetails()">
+                </div>
+                <div class="form-group">
+                    <label>Father's Name:</label>
+                    <input type="text" id="in_FName" value="RAJESH KUMAR CHOUDHARY" oninput="syncDetails()">
+                </div>
+                <div class="form-group full-width">
+                    <label>Examination Center:</label>
+                    <input type="text" id="in_CenterName" value="AL-KABIR POLYTECHNIC, JAMSHEDPUR" oninput="syncDetails()">
+                </div>
+                <div class="form-group full-width">
+                    <label>Board Text (Below Sign):</label>
+                    <input type="text" id="in_Board" value="JUT, JHARKHAND" oninput="syncDetails()">
+                </div>
+            </div>
+
+            <h3>2. Bulk Subject Format (Ek Baar Me Sara Add)</h3>
+            <div class="format-hint">
+                <b>Format (Har line me 1 subject):</b><br>
+                <code>SUBJECT NAME &amp; CODE | DATE | TIME</code><br>
+                *(SI. No. 1, 2, 3... apne aap lag jayega)*
+            </div>
+            <div class="form-group full-width">
+                <textarea id="bulk_subjects" rows="7" oninput="parseBulkSubjects()">ENTREPRENEURSHIP DEVELOPMENT AND STARTUPS [COMC501] | 29-01-2026 | 01:00 PM TO 04:00 PM
+OE-HRM USING AI & DATA SCIENCE [CSEOE504] | 31-01-2026 | 01:00 PM TO 04:00 PM
+PE-IOT [CSEPE503] | 02-02-2026 | 01:00 PM TO 04:00 PM
+ARTIFICIAL INTELLIGENCE AND MACHINE LEARNING [CSEC501] | 04-02-2026 | 01:00 PM TO 04:00 PM</textarea>
+                <button type="button" class="btn-action" onclick="parseBulkSubjects()">Update All Subjects</button>
+            </div>
+
+            <h3 style="margin-top: 18px;">3. Images Upload (Offline Preview)</h3>
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label>Top Banner Logo (JUT_Banner.png):</label>
+                    <input type="file" accept="image/*" onchange="previewImg(this, 'JUT')">
+                </div>
+                <div class="form-group">
+                    <label>Student Photo:</label>
+                    <input type="file" accept="image/*" onchange="previewImg(this, 'std_img')">
+                </div>
+                <div class="form-group">
+                    <label>Controller Signature:</label>
+                    <input type="file" accept="image/*" onchange="previewImg(this, 'sign_img')">
+                </div>
+            </div>
+
+            <button type="button" class="btn-action" style="background:#0d47a1; margin-top: 10px; height: 42px; font-size: 14px;" onclick="printDiv()">
+                🖨️ CLICK TO PRINT ADMIT CARD
+            </button>
+        </div>
+
+        <!-- ================= RIGHT SIDE: LIVE EDITABLE ADMIT CARD ================= -->
+        <div class="right-preview-pane">
+            <div class="admit-card-sheet">
+                <table border="0" width="100%">
+                    <tbody>
+                        <tr>
+                            <td align="center" id="print_area">
+                                <div style="page-break-after: always;">
+                                    <table cellpadding="0" cellspacing="0" width="100%">
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <table cellpadding="0" cellspacing="0" width="100%" style="border: 4px solid #70a105; margin: 1px 1px 1px 1px;">
+                                                        <tbody>
+                                                            <tr valign="top">
+                                                                <td>
+                                                                    <img src="printing_logo.png" id="SBTE" class="img-responsive" width="100%" height="95px" style="display:none;">
+                                                                    <img src="JUT_Banner.png" id="JUT" class="img-responsive" width="100%" height="95px" style="display:block;">
+                                                                </td>
+                                                                <td>
+                                                                    <div id="qrcode"></div>
+                                                                </td>
+                                                            </tr>
+                                                            <tr valign="top">
+                                                                <td colspan="2" style="text-align: center; font-family: 'Segoe UI Semibold'; font-size: 20px; color: #000; text-transform: uppercase; font-weight: bold; padding-top: 5px;">
+                                                                    <b style="text-decoration :underline" contenteditable="true">ADMIT CARD</b>
+                                                                </td>
+                                                            </tr>
+                                                            <tr style="height: 100px;">
+                                                                <td colspan="2">
+                                                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                                        <tbody>
+                                                                            <tr valign="top">
+                                                                                <td style="width: 75%; padding-top: 20px;">
+                                                                                    <table width="100%" border="0" style="margin-left: 10px;">
+                                                                                        <tbody>
+                                                                                            <tr style="font-size: 12px;">
+                                                                                                <td contenteditable="true" style="width: 150px; text-align: left; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;">Exam</td>
+                                                                                                <td style="width: 20px; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;">:</td>
+                                                                                                <td id="ExamName" contenteditable="true" style="text-align: left; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;"></td>
+                                                                                            </tr>
+                                                                                            <tr style="font-size: 12px;">
+                                                                                                <td contenteditable="true" style="width: 150px; text-align: left; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;">Institute</td>
+                                                                                                <td style="width: 20px; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;">:</td>
+                                                                                                <td id="InstituteName" contenteditable="true" style="text-align: left; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;"></td>
+                                                                                            </tr>
+                                                                                            <tr style="font-size: 12px;">
+                                                                                                <td contenteditable="true" style="width: 150px; text-align: left; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;">Branch</td>
+                                                                                                <td style="width: 20px; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;">:</td>
+                                                                                                <td id="Branch" contenteditable="true" style="text-align: left; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;"></td>
+                                                                                            </tr>
+                                                                                            <tr style="font-size: 12px;">
+                                                                                                <td contenteditable="true" style="width: 150px; text-align: left; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;">registration No</td>
+                                                                                                <td style="width: 20px; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;">:</td>
+                                                                                                <td id="RegNo" contenteditable="true" style="text-align: left; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;"></td>
+                                                                                            </tr>
+                                                                                            <tr style="font-size: 12px;">
+                                                                                                <td contenteditable="true" style="width: 150px; text-align: left; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;">STUDENT NAME</td>
+                                                                                                <td style="width: 20px; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;">:</td>
+                                                                                                <td id="StudentName" contenteditable="true" style="text-align: left; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;"></td>
+                                                                                            </tr>
+                                                                                            <tr style="font-size: 12px;">
+                                                                                                <td contenteditable="true" style="width: 150px; text-align: left; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;">FATHER'S NAME</td>
+                                                                                                <td style="width: 20px; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;">:</td>
+                                                                                                <td id="FName" contenteditable="true" style="text-align: left; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;"></td>
+                                                                                            </tr>
+                                                                                            <tr style="font-size: 12px;">
+                                                                                                <td contenteditable="true" style="width: 150px; text-align: left; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;">Examination Center</td>
+                                                                                                <td style="width: 20px; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;">:</td>
+                                                                                                <td id="CenterName" contenteditable="true" style="text-align: left; font-family: 'Segoe UI Semibold'; color: #000; text-transform: uppercase; font-weight: bold;"></td>
+                                                                                            </tr>
+                                                                                        </tbody>
+                                                                                    </table>
+                                                                                </td>
+                                                                                <td align="right" style="padding-right: 20px;">
+                                                                                    <img src="defaultUser.png" id="std_img" width="140" height="155" class="img-rounded">
+                                                                                </td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </td>
+                                                            </tr>
+                                                            <tr style="height: 200px;">
+                                                                <td colspan="2" align="center" valign="top" style="padding-top: 10px;">
+                                                                    <table id="SubjectTable" width="98%" cellpadding="0" cellspacing="0" border="1">
+                                                                        <thead>
+                                                                            <tr id="ExamTitle" style="font-family: 'Segoe UI Semibold'; color: #000; font-size: 13px; text-align: center; background-color: lightgray;">
+                                                                                <th contenteditable="true" style="width: 80px; height: 25px; text-align: center;">SI. No.</th>
+                                                                                <th contenteditable="true" style="width: 350px; text-align: center;">NAME OF SUBJECT &amp; CODE</th>
+                                                                                <th contenteditable="true" style="width: 120px; text-align: center;">DATE</th>
+                                                                                <th contenteditable="true" style="width: 150px; text-align: center;">TIME</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody id="SubjectList">
+                                                                        </tbody>
+                                                                    </table>
+                                                                </td>
+                                                            </tr>
+                                                            <tr style="height: 35px;">
+                                                                <td colspan="2" style="padding-right: 10px; float: right; text-align: center; font-family: 'Segoe UI Semibold'; font-size: 14px; color: #000; font-weight: bold;">
+                                                                    <img src="controller_sign_mam.png" id="sign_img" alt="Controller of Examination" width="150px" height="70"><br>
+                                                                    <span contenteditable="true">CONTROLLER OF EXAMINATION</span>
+                                                                    <p id="Board" contenteditable="true">JUT, JHARKHAND</p>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan="2">
+                                                                    <hr style="border: 1px dashed #272626">
+                                                                </td>
+                                                            </tr>
+                                                            <tr valign="bottom">
+                                                                <td colspan="2" contenteditable="true" style="font-family: 'Segoe UI Semibold'; font-size: 13px; color: #000; padding-left: 10px; text-align: left;">
+                                                                    <span style="width: 100%; padding-left: 320px; font-size: 15px"><b>परीक्षार्थी के लिए अनुदेश</b></span>
+                                                                    
+                                                                    <p>1.   परीक्षा शुरू होने के<b> निर्धारित समय से एक घंटा पूर्व</b>, परीक्षार्थी परीक्षा केन्द्र  पर पहुँचना सुनिश्चित करे।</p>
+                                                                    
+                                                                    <p>2.	<b>प्रवेश-पत्र में यदि फोटो न हो या गलत हो, ऐसी स्थिति में अपना दो पासपोर्ट आकार का फोटोग्राफ अपने संस्थान के प्राचार्य से अभिप्रमाणित कराकर एक को खाली स्थान में चिपकायें तथा दुसरा फोटोग्राफ &nbsp;&nbsp;&nbsp;अपने साथ परीक्षा कक्ष में लाकर वीक्षक को सौंप दें।</b></p>
+                                                                    <p>3.	परीक्षार्थी पहचान-पत्र के रूप में अपना आधार-कार्ड/संस्थान द्वारा निर्गत पहचान-पत्र को साथ में अवश्य रखें।</p>
+                                                                    <p>4.	परीक्षा के लिए परीक्षार्थी कम-से-कम दो<b> काले/नीले</b> रंग के बाॅल पाॅइंट पेन, पेन्सिल, ज्योमेट्री बाॅक्स तथा जरूरत के अनुसार साइंटिफिक कैल्कुलेटर साथ में लायें।</p>
+                                                                    <p>5.	परीक्षा कक्ष में इलेक्ट्रोनिक उपकरणों जैसे डिजिटल डायरी, मोबाईल फोन, पेजर, लौग टेबुल इत्यादि को लाना एवं<b> प्रयोग वर्जित</b> है।</p>
+                                                                    
+                                                                    <p>6.	परीक्षार्थी अपने कक्ष में क्रमांक के अनुसार निर्धारित सीट पर ही बैठें।</p>
+                                                                    <p>7.	विद्यार्थी अपने स्तर से ये सुनिश्चित कर ले की उत्तरपुस्तिका में किसी भी प्रकार की विसंगति नहीं है । ऐसा होने की स्तिथि में वीक्षक को उनके द्वारा अवगत कराया जाये ।</p>
+                                                                    <p>8.	परीक्षार्थी उत्तरपुस्तिका के प्रथम पृष्ठ पर अंकित सभी प्रविष्टियों तथा निबंधन संख्या, केन्द्र कोड, विषय कोड (केवल अंतिम का तीन अंक), विषय का नाम, परीक्षा का नाम, परीक्षा लिखने का माध्यम, परीक्षा तिथि, तथा हस्ताक्षर को अवश्य प्रविष्टि करें या भरना सुनिश्चित करें। <u><b>(उतर पुस्तिका में भरे गये निबंधन संख्या एवं <b>OMR Sheet</b> में रंगे गये गोल घेरे को परीक्षार्थी पुनः अवश्य जाँच लें, गलत होने पर परीक्षाफल प्रभावित हो जायेगा।)</b></u></p>
+                                                                    <p>9.	उतर-पुस्तिका में कहीं भी नाम, किसी प्रकार का चिन्ह् या प्रतीक (मार्क) न दें। ऐसी उतर-पुस्तिका को रद्द किया जा सकता है।</p>
+                                                                    <p>10.	परीक्षा का  निर्धारित समय समाप्ति के उपरान्त तत्काल लिखना बंद कर उतर-पुस्तिका को वीक्षक को सौंप दें। उसे न तो डेस्क पर छोड़े न ही बाहर लें जायें। </p>
+                                                                    <p>11.	यह प्रवेश-पत्र अस्थाई है और यदि परीक्षार्थी परीक्षा में शामिल होने की सभी शर्तें पूरा नहीं करते हैं तो परीक्षा दने के बाद भी उनका अभ्यर्थितता निरस्त कर दी जाएगी।</p>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="no-print">
+                            <td class="row" style="padding-bottom: 20px; padding-top:20px;">
+                                <button type="button" name="PRINT" class="btn btn-success btn-block" style="font-family: 'Bell Gothic Std Light'; font-size: 15px; background: #146405; color: #d3fef8; text-align: center; height: 35px; text-transform: uppercase; margin-top: 5px; border: 1px solid #defbf6;" onclick="printDiv()">CLICK TO PRINT ADMIT CARD</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="LoaderPopup"><!-- Place at bottom of page --></div>
+
+    <script type="text/javascript">
+        // Sync Left Form Inputs to Admit Card
+        function syncDetails() {
+            document.getElementById('ExamName').innerText = document.getElementById('in_ExamName').value;
+            document.getElementById('InstituteName').innerText = document.getElementById('in_InstituteName').value;
+            document.getElementById('Branch').innerText = document.getElementById('in_Branch').value;
+            document.getElementById('RegNo').innerText = document.getElementById('in_RegNo').value;
+            document.getElementById('StudentName').innerText = document.getElementById('in_StudentName').value;
+            document.getElementById('FName').innerText = document.getElementById('in_FName').value;
+            document.getElementById('CenterName').innerText = document.getElementById('in_CenterName').value;
+            document.getElementById('Board').innerText = document.getElementById('in_Board').value;
+        }
+
+        // Parse Bulk Format Textarea -> Populate All Subjects at Once
+        function parseBulkSubjects() {
+            var rawText = document.getElementById('bulk_subjects').value;
+            var lines = rawText.split('\n');
+            var tbody = document.getElementById('SubjectList');
+            tbody.innerHTML = "";
+
+            var serialNo = 1;
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].trim();
+                if (line === "") continue;
+
+                // Split by "|" or Tab
+                var parts = line.includes('|') ? line.split('|') : line.split('\t');
+
+                var subName = parts[0] ? parts[0].trim() : "";
+                var subDate = parts[1] ? parts[1].trim() : "";
+                var subTime = parts[2] ? parts[2].trim() : "";
+
+                var tr = document.createElement('tr');
+                tr.innerHTML =
+                    '<td contenteditable="true" style="text-align: center;">' + serialNo + '</td>' +
+                    '<td contenteditable="true" style="text-align: left;">' + subName + '</td>' +
+                    '<td contenteditable="true" style="text-align: center;">' + subDate + '</td>' +
+                    '<td contenteditable="true" style="text-align: center;">' + subTime + '</td>';
+
+                tbody.appendChild(tr);
+                serialNo++;
+            }
+        }
+
+        // Local Image Upload & Preview
+        function previewImg(input, targetId) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var imgElement = document.getElementById(targetId);
+                    imgElement.src = e.target.result;
+                    imgElement.style.display = "block";
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Initialize on Page Load
+        window.onload = function () {
+            syncDetails();
+            parseBulkSubjects();
+        };
+    </script>
+</body>
+</html>
